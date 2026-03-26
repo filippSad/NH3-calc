@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>NH₃ Calculator</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body {
+    font-family: -apple-system, 'SF Pro Display', 'Helvetica Neue', sans-serif;
+    background: #141414;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 20px;
+  }
+  .container { width: 100%; max-width: 360px; }
+  h1 { color: #e8e8e8; font-size: 28px; font-weight: 700; letter-spacing: -0.8px; margin-bottom: 36px; text-align: left; }
+  .field { margin-bottom: 14px; }
+  label { display: block; color: #888; font-size: 12px; font-weight: 500; letter-spacing: 0.4px; margin-bottom: 7px; padding-left: 4px; }
+  input { width: 100%; background: #1f1f1f; border: 1px solid #2c2c2c; border-radius: 12px; padding: 15px 16px; color: #e8e8e8; font-size: 17px; font-weight: 500; outline: none; transition: border-color 0.18s; -webkit-appearance: none; font-family: inherit; }
+  input:focus { border-color: #555; }
+  input::placeholder { color: #3a3a3a; font-weight: 400; }
+  .btn { width: 100%; background: #e8e8e8; color: #141414; border: none; border-radius: 12px; padding: 16px; font-size: 16px; font-weight: 600; cursor: pointer; margin-top: 8px; letter-spacing: -0.2px; transition: opacity 0.15s; font-family: inherit; }
+  .btn:active { opacity: 0.75; }
+  .result { margin-top: 24px; background: #1f1f1f; border: 1px solid #2c2c2c; border-radius: 12px; padding: 20px 18px; display: none; }
+  .result-value { font-size: 22px; font-weight: 600; letter-spacing: -0.4px; }
+  .safe   { color: #52c47a; }
+  .medium { color: #e0b84a; }
+  .high   { color: #e07a30; }
+  .danger { color: #d95050; }
+  .threshold { margin-top: 20px; border-top: 1px solid #222; padding-top: 18px; }
+  .threshold-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 9px; }
+  .threshold-row:last-child { margin-bottom: 0; }
+  .t-name  { font-size: 13px; color: #666; }
+  .t-range { font-size: 13px; color: #444; font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>NH₃ Calculator</h1>
+  <div class="field">
+    <label>NH₄⁺ (mg/L)</label>
+    <input type="number" id="tn" placeholder="0.0" step="0.1" inputmode="decimal"/>
+  </div>
+  <div class="field">
+    <label>pH</label>
+    <input type="number" id="ph" placeholder="0.0" step="0.1" inputmode="decimal"/>
+  </div>
+  <div class="field">
+    <label>Temperature (°C)</label>
+    <input type="number" id="temp" placeholder="0.0" step="0.1" inputmode="decimal"/>
+  </div>
+  <button class="btn" onclick="calculate()">Calculate</button>
+  <div class="result" id="result">
+    <div class="result-value" id="r-value"></div>
+  </div>
+  <div class="threshold">
+    <div class="threshold-row">
+      <span class="t-name safe">Safe</span>
+      <span class="t-range">0 – 0.1 mg/L</span>
+    </div>
+    <div class="threshold-row">
+      <span class="t-name medium">Moderate</span>
+      <span class="t-range">0.1 – 0.2 mg/L</span>
+    </div>
+    <div class="threshold-row">
+      <span class="t-name high">High</span>
+      <span class="t-range">0.2 – 0.3 mg/L</span>
+    </div>
+    <div class="threshold-row">
+      <span class="t-name danger">Dangerous</span>
+      <span class="t-range">&gt; 0.3 mg/L</span>
+    </div>
+  </div>
+</div>
+<script>
+function calculate() {
+  const tn  = parseFloat(document.getElementById('tn').value);
+  const pH  = parseFloat(document.getElementById('ph').value);
+  const T   = parseFloat(document.getElementById('temp').value);
+  if (isNaN(tn) || isNaN(pH) || isNaN(T)) { alert('Please fill in all fields'); return; }
+  const pKa      = 9.25 - ((T - 25) * 0.018);
+  const fraction = 1 / (1 + Math.pow(10, pKa - pH));
+  const NH3      = tn * fraction;
+  const val      = NH3.toFixed(2);
+  let cls, label;
+  if (NH3 < 0.1)      { cls = 'safe';   label = 'safe';      }
+  else if (NH3 < 0.2) { cls = 'medium'; label = 'moderate';  }
+  else if (NH3 < 0.3) { cls = 'high';   label = 'high';      }
+  else                 { cls = 'danger'; label = 'dangerous'; }
+  const resultEl = document.getElementById('result');
+  const valueEl  = document.getElementById('r-value');
+  valueEl.className   = 'result-value ' + cls;
+  valueEl.textContent = `NH₃ ≈ ${val} (${label})`;
+  resultEl.style.display = 'block';
+}
+document.addEventListener('keydown', e => { if (e.key === 'Enter') calculate(); });
+</script>
+</body>
+</html>
